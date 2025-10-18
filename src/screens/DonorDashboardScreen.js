@@ -352,7 +352,7 @@ const PostFoodForm = ({ visible, onClose, onSuccess }) => {
   // Get place details
   const getPlaceDetails = async (placeId) => {
     try {
-      const API_KEY = 'AIzaSyDf1vfB2AGpVCGh1fdwB5mMZ-ClAnYh0ic';
+      const API_KEY = 'your api key';
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${API_KEY}`
       );
@@ -399,7 +399,7 @@ const PostFoodForm = ({ visible, onClose, onSuccess }) => {
         accuracy: Location.Accuracy.High,
       });
 
-      const API_KEY = 'AIzaSyDf1vfB2AGpVCGh1fdwB5mMZ-ClAnYh0ic';
+      const API_KEY = 'your api key';
       const geocodeResponse = await fetch(
         `https://maps.googleapis.com/maps/api/geocode/json?latlng=${location.coords.latitude},${location.coords.longitude}&key=${API_KEY}`
       );
