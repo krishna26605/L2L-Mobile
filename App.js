@@ -9,6 +9,7 @@ import NGODashboardScreen from './src/screens/NGODashboardScreen';
 
 const Stack = createNativeStackNavigator();
 
+
 export default function App() {
   return (
     <AuthProvider>

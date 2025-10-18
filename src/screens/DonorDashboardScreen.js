@@ -872,6 +872,7 @@ const DonationCard = ({ donation, onUpdate }) => {
     }
   };
 
+  
   const handleDelete = async () => {
     Alert.alert(
       'Delete Donation',
