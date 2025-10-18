@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Constants from 'expo-constants';
 import { 
   View, 
   Text, 
@@ -325,113 +326,159 @@ const PostFoodForm = ({ visible, onClose, onSuccess }) => {
   ];
 
   // Google Places Autocomplete
-  const searchLocations = async (query) => {
-    if (query.length < 3) {
-      setSuggestions([]);
-      setShowSuggestions(false);
+ const searchLocations = async (query) => {
+  if (query.length < 3) {
+    setSuggestions([]);
+    setShowSuggestions(false);
+    return;
+  }
+
+  try {
+    const API_KEY = Constants.expoConfig?.extra?.googleMapsApiKey || Constants.manifest?.extra?.googleMapsApiKey;
+    
+    if (!API_KEY) {
+      console.error('Google Maps API key not found');
+      Alert.alert('Error', 'Google Maps API key is not configured');
       return;
     }
 
-    try {
-      const API_KEY = 'AIzaSyDf1vfB2AGpVCGh1fdwB5mMZ-ClAnYh0ic ';
-      const response = await fetch(
-        `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(query)}&key=${API_KEY}&components=country:in`
-      );
-      const data = await response.json();
-      
-      if (data.predictions) {
-        setSuggestions(data.predictions);
-        setShowSuggestions(true);
-      }
-    } catch (error) {
-      console.error('Location search error:', error);
-      setSuggestions([]);
+    console.log('🔍 Searching locations for:', query);
+    const response = await fetch(
+      `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(query)}&key=${API_KEY}&components=country:in`
+    );
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-  };
-
-  // Get place details
-  const getPlaceDetails = async (placeId) => {
-    try {
-      const API_KEY = 'your api key';
-      const response = await fetch(
-        `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${API_KEY}`
-      );
-      const data = await response.json();
-      
-      if (data.result && data.result.geometry) {
-        const place = data.result;
-        setFormData(prev => ({
-          ...prev,
-          location: {
-            address: place.formatted_address,
-            lat: place.geometry.location.lat,
-            lng: place.geometry.location.lng
-          }
-        }));
-        
-        setMapRegion({
-          latitude: place.geometry.location.lat,
-          longitude: place.geometry.location.lng,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        });
-        
-        setShowSuggestions(false);
-      }
-    } catch (error) {
-      console.error('Place details error:', error);
-      Alert.alert('Error', 'Failed to get location details');
+    
+    const data = await response.json();
+    console.log('📍 Location suggestions:', data.predictions?.length);
+    
+    if (data.predictions) {
+      setSuggestions(data.predictions);
+      setShowSuggestions(true);
     }
-  };
+  } catch (error) {
+    console.error('Location search error:', error);
+    setSuggestions([]);
+    Alert.alert('Error', 'Failed to search locations. Please check your internet connection.');
+  }
+};
 
-  // Get current location
-  const getCurrentLocation = async () => {
-    setLocationLoading(true);
-    try {
-      let { status } = await Location.requestForegroundPermissionsAsync();
+// Get place details
+const getPlaceDetails = async (placeId) => {
+  try {
+    const API_KEY = Constants.expoConfig?.extra?.googleMapsApiKey || Constants.manifest?.extra?.googleMapsApiKey;
+    
+    if (!API_KEY) {
+      console.error('Google Maps API key not found');
+      Alert.alert('Error', 'Google Maps API key is not configured');
+      return;
+    }
+
+    console.log('🔍 Getting place details for:', placeId);
+    const response = await fetch(
+      `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${API_KEY}`
+    );
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('📍 Place details received:', data.result?.name);
+    
+    if (data.result && data.result.geometry) {
+      const place = data.result;
+      setFormData(prev => ({
+        ...prev,
+        location: {
+          address: place.formatted_address,
+          lat: place.geometry.location.lat,
+          lng: place.geometry.location.lng
+        }
+      }));
       
-      if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'Location permission is required to use this feature.');
-        return;
-      }
-
-      let location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High,
+      setMapRegion({
+        latitude: place.geometry.location.lat,
+        longitude: place.geometry.location.lng,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
       });
-
-      const API_KEY = 'your api key';
-      const geocodeResponse = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${location.coords.latitude},${location.coords.longitude}&key=${API_KEY}`
-      );
-      const geocodeData = await geocodeResponse.json();
       
-      if (geocodeData.results && geocodeData.results.length > 0) {
-        const address = geocodeData.results[0].formatted_address;
-        setFormData(prev => ({
-          ...prev,
-          location: {
-            address: address,
-            lat: location.coords.latitude,
-            lng: location.coords.longitude
-          }
-        }));
-        
-        setMapRegion({
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        });
-        
-        Alert.alert('Success', 'Current location detected!');
-      }
-    } catch (error) {
-      console.error('Location error:', error);
-      Alert.alert('Error', 'Failed to get current location. Please enter address manually.');
-    } finally {
-      setLocationLoading(false);
+      setShowSuggestions(false);
     }
-  };
+  } catch (error) {
+    console.error('Place details error:', error);
+    Alert.alert('Error', 'Failed to get location details. Please try again.');
+  }
+};
+
+// Get current location
+const getCurrentLocation = async () => {
+  setLocationLoading(true);
+  try {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    
+    if (status !== 'granted') {
+      Alert.alert('Permission Denied', 'Location permission is required to use this feature.');
+      return;
+    }
+
+    console.log('📍 Getting current location...');
+    let location = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.High,
+    });
+
+    const API_KEY = Constants.expoConfig?.extra?.googleMapsApiKey || Constants.manifest?.extra?.googleMapsApiKey;
+    
+    if (!API_KEY) {
+      console.error('Google Maps API key not found');
+      Alert.alert('Error', 'Google Maps API key is not configured');
+      return;
+    }
+
+    console.log('📍 Reverse geocoding location...');
+    const geocodeResponse = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?latlng=${location.coords.latitude},${location.coords.longitude}&key=${API_KEY}`
+    );
+    
+    if (!geocodeResponse.ok) {
+      throw new Error(`HTTP error! status: ${geocodeResponse.status}`);
+    }
+    
+    const geocodeData = await geocodeResponse.json();
+    console.log('📍 Geocode results:', geocodeData.results?.length);
+    
+    if (geocodeData.results && geocodeData.results.length > 0) {
+      const address = geocodeData.results[0].formatted_address;
+      setFormData(prev => ({
+        ...prev,
+        location: {
+          address: address,
+          lat: location.coords.latitude,
+          lng: location.coords.longitude
+        }
+      }));
+      
+      setMapRegion({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      });
+      
+      Alert.alert('Success', 'Current location detected!');
+    } else {
+      Alert.alert('Error', 'No address found for your current location.');
+    }
+  } catch (error) {
+    console.error('Location error:', error);
+    Alert.alert('Error', 'Failed to get current location. Please enter address manually.');
+  } finally {
+    setLocationLoading(false);
+  }
+};
 
   // Custom DateTime Picker Functions
   const showCustomDateTimePicker = (field) => {
