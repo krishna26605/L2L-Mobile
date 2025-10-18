@@ -333,7 +333,7 @@ const PostFoodForm = ({ visible, onClose, onSuccess }) => {
     }
 
     try {
-      const API_KEY = 'AIzaSyDf1vfB2AGpVCGh1fdwB5mMZ-ClAnYh0ic';
+      const API_KEY = 'AIzaSyDf1vfB2AGpVCGh1fdwB5mMZ-ClAnYh0ic ';
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(query)}&key=${API_KEY}&components=country:in`
       );
