@@ -1,3 +1,4 @@
+// C:\Users\Krishna\OneDrive\Desktop\L2L-Mobile-app\mobile\src\screens\AuthScreen.js
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useAuth } from '../context/AuthContext';

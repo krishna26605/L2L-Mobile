@@ -1,3 +1,5 @@
+// C:\Users\Krishna\OneDrive\Desktop\L2L-Mobile-app\mobile\src\lib\api.js
+
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
@@ -140,7 +142,8 @@ export const donationsAPI = {
   delete: (id) => api.delete(`/donations/${id}`),
   claim: (id) => api.post(`/donations/${id}/claim`),
   markAsPicked: (id) => api.post(`/donations/${id}/pickup`),
-};
+  getMyClaims: () => api.get('/donations/ngo/my-claims'), // ADD THIS LINE
+}
 
 // Test function to check backend connectivity
 export const testBackendConnection = async () => {
